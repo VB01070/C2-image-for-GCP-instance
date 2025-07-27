@@ -325,12 +325,6 @@ rm -f /EMPTY
 shutdown -h now
 ```
 
-Excellent. We're now at the final stage. Step 4 involves getting the image out of VMware and into your Google Cloud Platform project.
-
-We'll do this part by part, as you requested.
-
-***
-
 ## Export the Image from VMware
 
 The goal here is to get the virtual disk out of VMware in a portable format. The best format for this is an **OVA (Open Virtualization Appliance)** file, which packages your entire VM into a single, convenient file.
@@ -355,4 +349,3 @@ With the VM **powered off** and **no snapshots**, you can now export it.
 
 VMware will package th VM into a single `.ova` file. This process might take several minutes, depending on the size of your VM's disk.
 
-***
