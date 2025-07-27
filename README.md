@@ -347,5 +347,84 @@ With the VM **powered off** and **no snapshots**, you can now export it.
 * In the "Format" or "Save as type" dropdown, choose **OVA (.ova)**.
 * Save the file.
 
-VMware will package th VM into a single `.ova` file. This process might take several minutes, depending on the size of your VM's disk.
 
+##  Prepare for Upload (Install Google Cloud SDK)
+
+The good news is that the Google Cloud command-line tool can now handle the processing and uploading of your `.ova` file in a single step.
+
+Before we can upload, you need the **Google Cloud SDK (`gcloud`)** installed and configured on the computer where you saved the `.ova` file.
+
+#### **1. Install the Google Cloud SDK**
+
+If you don't already have it, follow the official instructions to install the SDK on your operating system (Windows, macOS, or Linux).
+
+  * **Official Install Guide:** [https://cloud.google.com/sdk/docs/install](https://cloud.google.com/sdk/docs/install)
+
+#### **2. Initialize the SDK**
+
+Once installed, open a new terminal or command prompt and run this command. It will walk you through authenticating your account and selecting the GCP project you want to work with.
+
+```bash
+gcloud init
+```
+
+  * This command will open a web browser, asking you to log in to your Google account.
+  * After logging in, it will ask you to choose the cloud project where you want to upload your image. **Select the project your team will use.**
+
+This one-time setup configures the SDK to work with your account.
+
+## Upload
+
+```bash
+gcloud config set compute/region europe-west4
+gcloud storage buckets create gs://gost-server-image-files
+cloud storage cp gost-server-ubuntu.ova gs://gost-server-image-files
+gcloud migration vms image-imports create gostserver-import-1 --source-file=gs://gost-server-image-files/gost-server-ubuntu.ova
+```
+
+Excellent, the import job is now running in the cloud. Here are the final steps to monitor the process and share the finished image with your team.
+
+-----
+
+## Monitor the Import Job
+
+The import process can take some time. Check its status from the command line.
+
+1.  Run the `describe` command to see the current state of the import job. Use the same region you specified when creating the job.
+
+    ```bash
+    # Use the same region you used before
+    gcloud migration vms image-imports describe gostserver-import-1 --region=europe-west4
+    ```
+
+    Look for the `state` field in the output. It will eventually change to `state: SUCCEEDED`.
+
+2.  Alternatively, it can be monitor in the web console by navigating to **VM Migration \> Image Imports**.
+
+##Verify the New Image
+
+Once the job succeeds, the custom image will be ready.
+
+  * In the GCP console, go to **Compute Engine \> Images**.
+  * New image listed, likely with a name derived from the `.ova` file, such as `gostserver-ubuntu`.
+
+-----
+
+## Share the Image 
+
+
+1.  Stay on the **Compute Engine \> Images** page.
+2.  Find the new image in the list and check the box next to it.
+3.  On the right side of the screen, a permissions panel will appear. Click **Add Principal**.
+4.  In the **New principals** field, enter the email addresses . (For easier management, you can create a Google Group and add the group's email address).
+5.  In the **Select a role** dropdown, find and choose **`Compute Engine > Compute Image User`**.
+6.  Click **Save**.
+
+
+
+**Final Reminder:** Run the following commands the very first time they launch a VM from this image to install the GCP guest tools:
+
+```bash
+sudo apt update -y
+sudo apt install -y google-guest-agent google-osconfig-agent
+```
