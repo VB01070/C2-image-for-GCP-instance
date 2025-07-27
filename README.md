@@ -1,0 +1,1 @@
+# C2-image-for-GCP-instance
