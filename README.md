@@ -347,6 +347,9 @@ With the VM **powered off** and **no snapshots**, you can now export it.
 * In the "Format" or "Save as type" dropdown, choose **OVA (.ova)**.
 * Save the file.
 
+```bash
+tar -xvf gost-server-ubuntu.ova
+```
 
 ##  Prepare for Upload (Install Google Cloud SDK)
 
@@ -377,8 +380,14 @@ This one-time setup configures the SDK to work with your account.
 
 ```bash
 gcloud config set compute/region europe-west4
+```
+```bash
 gcloud storage buckets create gs://gost-server-image-files
-cloud storage cp gost-server-ubuntu.ova gs://gost-server-image-files
+```
+```bash
+gcloud storage cp gost-server-ubuntu-disk1.vmdk gs://gost-server-image-files
+```
+```bash
 gcloud migration vms image-imports create gostserver-import-1 --source-file=gs://gost-server-image-files/gost-server-ubuntu.ova
 ```
 
@@ -410,6 +419,33 @@ Once the job succeeds, the custom image will be ready.
 
 -----
 
+## Enable the service
+
+1. Log in to the Google Cloud console at console.cloud.google.com.
+2. At the very top of the page, you will see a search bar that says "Search products and resources".
+3. Type Migrate to Virtual Machines into that search bar.
+4. Click on the result that appears.
+
+This will take to the correct page where you will see the button to Enable or Start Setup. Pick the right project.
+On the dashboard page:
+1. Find the box titled Add targets.
+2. Click the blue button inside that box labeled MANAGE TARGETS.
+
+After clicking it, a new page may load. Need to click another "Add" or "Create" button to confirm. Not need to fill out any complex forms. 
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://gost-server-image-files --member=serviceAccount:service-XXXXXXXXXXX@gcp-sa-vmmigration.iam.gserviceaccount.com --role=roles/storage.objectViewer
+gcloud migration vms image-imports create gostserver-import-1 --source-file=gs://gost-server-image-files/gost-server-ubuntu-disk1.vmdk
+```
+
+Then go to ``Migrate to Virtual Machines > Image Imports`` to see the state of the importation. 
+When the importation is done (process can take up to 30 minutes) run
+```bash
+gcloud migration vms image-imports describe gostserver-import-1 --region=us-central1
+```
+
+Wait until see state: ``SUCCEEDED``
+
 ## Share the Image 
 
 
@@ -426,5 +462,7 @@ Once the job succeeds, the custom image will be ready.
 
 ```bash
 sudo apt update -y
+```
+```bash
 sudo apt install -y google-guest-agent google-osconfig-agent
 ```
